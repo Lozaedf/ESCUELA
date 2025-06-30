@@ -4,7 +4,7 @@ $mensaje = "";
 $mensaje_tipo = ""; // 'exito' o 'error'
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // ... (el código PHP de registro no cambia, solo la forma de mostrar el mensaje)
+    // ... (previous code is fine)
     $tipo = $_POST["tipo"];
     $nombre = $_POST["nombre"];
     $apellido = $_POST["apellido"];
@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute();
         $id_relacionado = $stmt->insert_id;
         $stmt->close();
-    } else {
+    } else { // 'profesor'
         $stmt = $conn->prepare("INSERT INTO profesores (nombre, apellido, email) VALUES (?, ?, ?)");
         $stmt->bind_param("sss", $nombre, $apellido, $email);
         $stmt->execute();
@@ -29,7 +29,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->close();
     }
 
+    // The error is here
     $stmt = $conn->prepare("INSERT INTO usuarios (email, password, tipo, id_relacionado) VALUES (?, ?, ?, ?)");
+    
+    // ▼▼▼ THIS IS THE FIX ▼▼▼
+    // You must bind the parameters before executing
+    $stmt->bind_param("sssi", $email, $password, $tipo, $id_relacionado);
+
     if ($stmt->execute()) {
         $mensaje = "Registro exitoso. Ahora puedes <a href='login.php'>iniciar sesión</a>.";
         $mensaje_tipo = "exito";
@@ -96,11 +102,9 @@ function mostrarCampos(tipo) {
     var camposAlumno = document.getElementById("campos_alumno");
     if (tipo === "alumno") {
         camposAlumno.style.display = 'flex';
-        // Hacer los campos de alumno requeridos
         camposAlumno.querySelectorAll('input').forEach(input => input.required = true);
     } else {
         camposAlumno.style.display = 'none';
-        // Quitar el 'required' si no es alumno
         camposAlumno.querySelectorAll('input').forEach(input => input.required = false);
     }
 }

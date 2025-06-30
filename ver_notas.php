@@ -4,39 +4,38 @@ if (!isset($_SESSION["usuario_id"])) {
     header("Location: login.php");
     exit;
 }
-include 'conexion.php';
+
+include_once 'config/database.php';
+include_once 'models/Student.php';
+include_once 'models/Teacher.php';
+
+$database = new Database();
+$db = $database->getConnection();
 
 $notas = [];
 $alumno_buscado = false;
 $tipo_usuario = $_SESSION["tipo"];
-$id_relacionado = $_SESSION["id_relacionado"];
 
-// Si el usuario es un alumno, busca sus propias notas automáticamente.
 if ($tipo_usuario == 'alumno') {
-    $id_alumno = $id_relacionado;
-    $alumno_buscado = true;
-} elseif ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Si es profesor, busca por el ID que ponga en el formulario.
-    $id_alumno = $_POST["id_alumno"];
-    $alumno_buscado = true;
-}
-
-if ($alumno_buscado) {
-    $query = "SELECT m.nombre AS materia, n.trimestre, n.nota
-              FROM notas n
-              JOIN materias m ON n.id_materia = m.id
-              WHERE n.id_alumno = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $id_alumno);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $student = new Student($db);
+    $student->related_id = $_SESSION['id_relacionado'];
+    $result = $student->getGrades();
     while ($fila = $result->fetch_assoc()) {
         $notas[] = $fila;
     }
-    $stmt->close();
+    $alumno_buscado = true;
+} elseif ($tipo_usuario == 'profesor' && $_SERVER["REQUEST_METHOD"] == "POST") {
+    $teacher = new Teacher($db);
+    $id_alumno = $_POST["id_alumno"];
+    $result = $teacher->getGradesForStudent($id_alumno);
+    while ($fila = $result->fetch_assoc()) {
+        $notas[] = $fila;
+    }
+    $alumno_buscado = true;
 }
-?>
 
+// Your HTML part remains the same
+?>
 <!DOCTYPE html>
 <html>
 <head>

@@ -1,36 +1,30 @@
 <?php
 session_start();
-include 'conexion.php';
+include_once 'config/database.php';
+include_once 'models/User.php';
+
+$database = new Database();
+$db = $database->getConnection();
+$user = new User($db);
 
 $mensaje = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST["email"];
-    $password = $_POST["password"];
+    $user->email = $_POST['email'];
+    $user->password = $_POST['password'];
 
-    $stmt = $conn->prepare("SELECT * FROM usuarios WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $resultado = $stmt->get_result();
-
-    if ($resultado->num_rows == 1) {
-        $usuario = $resultado->fetch_assoc();
-        if (password_verify($password, $usuario["password"])) {
-            $_SESSION["usuario_id"] = $usuario["id"];
-            $_SESSION["tipo"] = $usuario["tipo"];
-            $_SESSION["id_relacionado"] = $usuario["id_relacionado"];
-            header("Location: dashboard.php");
-            exit;
-        } else {
-            $mensaje = "Contraseña incorrecta.";
-        }
+    if ($user->login()) {
+        $_SESSION["usuario_id"] = $user->id;
+        $_SESSION["tipo"] = $user->type;
+        $_SESSION["id_relacionado"] = $user->related_id;
+        header("Location: dashboard.php");
+        exit;
     } else {
-        $mensaje = "Usuario no encontrado.";
+        $mensaje = "Email o contraseña incorrectos.";
     }
-    $stmt->close();
 }
+// The rest of your HTML remains the same
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
