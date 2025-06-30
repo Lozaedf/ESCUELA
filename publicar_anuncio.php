@@ -2,8 +2,9 @@
 session_start();
 include 'conexion.php';
 
+// Redirigir si no es un profesor
 if (!isset($_SESSION["usuario_id"]) || $_SESSION["tipo"] != "profesor") {
-    header("Location: login.php");
+    header("Location: dashboard.php");
     exit;
 }
 
@@ -11,15 +12,18 @@ $mensaje = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $titulo = $_POST["titulo"];
     $contenido = $_POST["contenido"];
-    $id_profesor = $_SESSION["id_relacionado"];
+    $id_profesor = $_SESSION["id_relacionado"]; // ID del profesor logueado
     $fecha = date("Y-m-d");
 
     $stmt = $conn->prepare("INSERT INTO anuncios (titulo, contenido, fecha, id_profesor) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("sssi", $titulo, $contenido, $fecha, $id_profesor);
-    $stmt->execute();
+    
+    if ($stmt->execute()) {
+        $mensaje = "Anuncio publicado exitosamente.";
+    } else {
+        $mensaje = "Hubo un error al publicar el anuncio.";
+    }
     $stmt->close();
-
-    $mensaje = "Anuncio publicado exitosamente.";
 }
 ?>
 
@@ -30,13 +34,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h2>Publicar Anuncio</h2>
-<p><?php echo $mensaje; ?></p>
-<form method="post">
-    <label>Título:</label><input type="text" name="titulo" required><br>
-    <label>Contenido:</label><br>
-    <textarea name="contenido" rows="5" cols="40" required></textarea><br>
-    <input type="submit" value="Publicar">
-</form>
+<?php include 'dashboard.php'; // Incluye la barra de navegación ?>
+
+<div class="container">
+    <h2>Publicar un Nuevo Anuncio</h2>
+
+    <?php if (!empty($mensaje)): ?>
+        <div class="mensaje exito"><?php echo $mensaje; ?></div>
+    <?php endif; ?>
+
+    <form method="post">
+        <label for="titulo">Título:</label>
+        <input type="text" id="titulo" name="titulo" required>
+        
+        <label for="contenido">Contenido:</label>
+        <textarea id="contenido" name="contenido" rows="8" required></textarea>
+        
+        <input type="submit" value="Publicar Anuncio">
+    </form>
+</div>
 </body>
 </html>

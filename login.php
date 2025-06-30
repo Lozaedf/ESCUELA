@@ -34,16 +34,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <title>Iniciar Sesión</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h2>Iniciar Sesión</h2>
-<p><?php echo $mensaje; ?></p>
-<form method="post">
-    <label>Email:</label><input type="email" name="email" required><br>
-    <label>Contraseña:</label><input type="password" name="password" required><br>
-    <input type="submit" value="Ingresar">
-</form>
+<div class="container">
+    <h2>Iniciar Sesión</h2>
+    <?php if (!empty($mensaje)): ?>
+        <div class="mensaje error"><?php echo $mensaje; ?></div>
+    <?php endif; ?>
+    <form method="post">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        
+        <label for="password">Contraseña:</label>
+        <input type="password" id="password" name="password" required>
+        
+        <input type="submit" value="Ingresar">
+    </form>
+    <p style="text-align: center; margin-top: 20px;">
+        ¿No tienes una cuenta? <a href="registro.php">Regístrate aquí</a>
+    </p>
+</div>
 </body>
 </html>

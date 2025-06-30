@@ -1,9 +1,10 @@
 <?php
 include 'conexion.php';
-
 $mensaje = "";
+$mensaje_tipo = ""; // 'exito' o 'error'
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // ... (el código PHP de registro no cambia, solo la forma de mostrar el mensaje)
     $tipo = $_POST["tipo"];
     $nombre = $_POST["nombre"];
     $apellido = $_POST["apellido"];
@@ -29,48 +30,79 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $stmt = $conn->prepare("INSERT INTO usuarios (email, password, tipo, id_relacionado) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("sssi", $email, $password, $tipo, $id_relacionado);
-    $stmt->execute();
+    if ($stmt->execute()) {
+        $mensaje = "Registro exitoso. Ahora puedes <a href='login.php'>iniciar sesión</a>.";
+        $mensaje_tipo = "exito";
+    } else {
+        $mensaje = "Error en el registro. Es posible que el email ya esté en uso.";
+        $mensaje_tipo = "error";
+    }
     $stmt->close();
-
-    $mensaje = "Registro exitoso. Ahora puedes iniciar sesión.";
 }
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Registro</title>
+    <title>Registro de Usuario</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h2>Registro de Usuario</h2>
-<p><?php echo $mensaje; ?></p>
-<form method="post">
-    <label>Tipo:</label>
-    <select name="tipo" required onchange="mostrarCampos(this.value)">
-        <option value="">Seleccionar</option>
-        <option value="alumno">Alumno</option>
-        <option value="profesor">Profesor</option>
-    </select><br><br>
+<div class="container">
+    <h2>Registro de Usuario</h2>
+    <?php if (!empty($mensaje)): ?>
+        <div class="mensaje <?php echo $mensaje_tipo; ?>"><?php echo $mensaje; ?></div>
+    <?php endif; ?>
+    <form method="post">
+        <label for="tipo">Tipo de Usuario:</label>
+        <select id="tipo" name="tipo" required onchange="mostrarCampos(this.value)">
+            <option value="">Seleccionar...</option>
+            <option value="alumno">Alumno</option>
+            <option value="profesor">Profesor</option>
+        </select>
 
-    <label>Nombre:</label><input type="text" name="nombre" required><br>
-    <label>Apellido:</label><input type="text" name="apellido" required><br>
-    <label>Email:</label><input type="email" name="email" required><br>
-    <label>Contraseña:</label><input type="password" name="password" required><br>
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required>
+        
+        <label for="apellido">Apellido:</label>
+        <input type="text" id="apellido" name="apellido" required>
+        
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        
+        <label for="password">Contraseña:</label>
+        <input type="password" id="password" name="password" required>
 
-    <div id="campos_alumno" style="display:none;">
-        <label>DNI:</label><input type="text" name="dni"><br>
-        <label>Curso:</label><input type="text" name="curso"><br>
-        <label>División:</label><input type="text" name="division"><br>
-    </div>
+        <div id="campos_alumno" style="display:none; flex-direction: column; gap: 15px;">
+            <label for="dni">DNI:</label>
+            <input type="text" id="dni" name="dni">
+            
+            <label for="curso">Curso:</label>
+            <input type="text" id="curso" name="curso">
+            
+            <label for="division">División:</label>
+            <input type="text" id="division" name="division">
+        </div>
 
-    <input type="submit" value="Registrarse">
-</form>
+        <input type="submit" value="Registrarse">
+    </form>
+    <p style="text-align: center; margin-top: 20px;">
+        ¿Ya tienes una cuenta? <a href="login.php">Inicia sesión</a>
+    </p>
+</div>
 
 <script>
 function mostrarCampos(tipo) {
-    document.getElementById("campos_alumno").style.display = (tipo === "alumno") ? "block" : "none";
+    var camposAlumno = document.getElementById("campos_alumno");
+    if (tipo === "alumno") {
+        camposAlumno.style.display = 'flex';
+        // Hacer los campos de alumno requeridos
+        camposAlumno.querySelectorAll('input').forEach(input => input.required = true);
+    } else {
+        camposAlumno.style.display = 'none';
+        // Quitar el 'required' si no es alumno
+        camposAlumno.querySelectorAll('input').forEach(input => input.required = false);
+    }
 }
 </script>
 </body>
